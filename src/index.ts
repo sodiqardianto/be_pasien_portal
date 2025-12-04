@@ -1,37 +1,58 @@
 import 'dotenv/config';
 import express, { Application } from 'express';
 import cors from 'cors';
+import helmet from 'helmet';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import authRoutes from './routes/auth.routes';
-import { errorHandler, notFoundHandler } from './middleware/errorHandler';
-import { connectDatabase, disconnectDatabase } from './utils/prisma';
+import { authRoutes } from './modules/auth';
+import { hospitalsRoutes } from './modules/hospitals';
+import { errorHandler, notFoundHandler, sanitizeAll } from './shared/middleware';
+import { connectDatabase, disconnectDatabase } from './shared/utils/prisma.util';
+import { appConfig } from './config';
 
 const app: Application = express();
-const PORT = process.env.PORT || 3000;
 
+// Security headers
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'", "'unsafe-inline'"],
+      imgSrc: ["'self'", "data:", "https:"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
+}));
+
+// CORS configuration
 const corsOptions = {
-  origin: process.env.CORS_ORIGIN || '*',
+  origin: appConfig.corsOrigin === '*' 
+    ? '*' 
+    : appConfig.corsOrigin.split(',').map(origin => origin.trim()),
   credentials: true,
   optionsSuccessStatus: 200,
 };
 
 app.use(cors(corsOptions));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Sanitize all inputs
+app.use(sanitizeAll);
 
 // Swagger setup
 const swaggerOptions = {
   definition: {
     openapi: '3.0.0',
     info: {
-      title: 'Patient Portal API',
+      title: 'Hospital Management API',
       version: '1.0.0',
-      description: 'API for Patient Portal with JWT Authentication',
+      description: 'API for Hospital Management System with JWT Authentication',
     },
     servers: [
       {
-        url: 'http://localhost:3000',
+        url: `http://localhost:${appConfig.port}`,
       },
     ],
     components: {
@@ -44,7 +65,7 @@ const swaggerOptions = {
       },
     },
   },
-  apis: ['./src/routes/*.ts'],
+  apis: ['./src/modules/*/*.routes.ts'],
 };
 
 const specs = swaggerJsdoc(swaggerOptions);
@@ -53,17 +74,21 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs));
 app.get('/', (_req, res) => {
   res.json({
     success: true,
-    message: 'Patient Portal API is running',
+    message: 'Hospital Management API is running',
     version: '1.0.0',
     endpoints: {
       auth: '/api/auth',
+      hospitals: '/api/hospitals',
       docs: '/api-docs',
     },
   });
 });
 
+// Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/hospitals', hospitalsRoutes);
 
+// Error handlers
 app.use(notFoundHandler);
 app.use(errorHandler);
 
@@ -71,9 +96,10 @@ const startServer = async () => {
   try {
     await connectDatabase();
 
-    app.listen(PORT, () => {
-      console.log(`Server is running on port ${PORT}`);
-      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+    app.listen(appConfig.port, () => {
+      console.log(`Server is running on port ${appConfig.port}`);
+      console.log(`Environment: ${appConfig.nodeEnv}`);
+      console.log(`API Documentation: http://localhost:${appConfig.port}/api-docs`);
     });
   } catch (error) {
     console.error('Failed to start server:', error);

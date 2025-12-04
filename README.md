@@ -1,6 +1,8 @@
-# Patient Portal Backend API
+# Hospital Management System - Backend API
 
-Backend API for Patient Portal with JWT Authentication, built with Express, TypeScript, Prisma, and MySQL.
+Backend API for Hospital Management System with JWT Authentication, built with Express, TypeScript, Prisma, and PostgreSQL.
+
+> **🏗️ Architecture**: Feature-Based Architecture - Each module is self-contained with its own controllers, services, DTOs, and routes.
 
 ## Features
 
@@ -13,13 +15,13 @@ Backend API for Patient Portal with JWT Authentication, built with Express, Type
 - **Password Hashing** with bcrypt
 - **TypeScript** for type safety
 - **Prisma ORM** for database management
-- **Unit Testing** with Jest and Supertest
+- **Soft Delete** support for data retention
 - **API Documentation** with Swagger/OpenAPI
 
 ## Prerequisites
 
 - Node.js (v18 or higher)
-- MySQL (v8 or higher)
+- PostgreSQL (v14 or higher)
 - npm or yarn
 
 ## Installation
@@ -37,7 +39,7 @@ cp .env.example .env
 
 4. Update `.env` with your database credentials:
 ```env
-DATABASE_URL="mysql://username:password@localhost:3306/pasien_portal"
+DATABASE_URL="postgresql://username:password@localhost:5432/hospital_db?schema=public"
 ACCESS_TOKEN_SECRET=your-secret-key
 REFRESH_TOKEN_SECRET=your-refresh-secret-key
 ```
@@ -130,25 +132,7 @@ The API includes interactive documentation powered by Swagger/OpenAPI.
 - Error response formats
 - Try-it-out functionality for testing endpoints
 
-## Testing
 
-The project includes unit tests using Jest and Supertest for API endpoint testing.
-
-### Running Tests
-```bash
-npm test
-```
-
-### Test Coverage
-- **Auth Controller Tests**: Register and login functionality
-- **Mocked Dependencies**: Prisma database, JWT utilities, password hashing
-- **Test Cases**: Success scenarios and error handling
-
-### Test Structure
-```
-tests/
-└── auth.test.ts    # Authentication endpoint tests
-```
 
 ## Response Format
 
@@ -186,26 +170,50 @@ All API responses follow this standardized format:
 
 ## Security Features
 
-- JWT-based authentication
-- Password hashing with bcrypt
-- Input validation with Zod
-- Rate limiting on sensitive endpoints
-- CORS protection
-- SQL injection protection via Prisma
+### Authentication & Authorization
+- **JWT-based authentication** - Secure token-based auth with access & refresh tokens
+- **Password hashing** - bcrypt with salt rounds
+- **Role-based access control** - USER and ADMIN roles
+
+### Input Security
+- **Input validation** - Zod schema validation on all endpoints
+- **Input sanitization** - XSS protection with automatic sanitization
+- **SQL injection protection** - Prisma ORM with parameterized queries
+
+### Network Security
+- **Security headers** - Helmet.js for HTTP security headers
+  - X-Frame-Options
+  - X-Content-Type-Options
+  - Strict-Transport-Security
+  - Content-Security-Policy
+- **CORS protection** - Configurable origin whitelist
+- **Rate limiting** - Prevent brute force attacks
+  - Login/Register: 5 requests per 15 minutes
+  - Refresh Token: 10 requests per 15 minutes
+
+### Data Protection
+- **Soft delete** - Data retention with deletedAt timestamp
+- **Request size limits** - 10MB max payload
+- **Automatic sanitization** - All inputs sanitized before processing
 
 ## Database Schema
 
 ### User Model
 ```prisma
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
+  id           String    @id @default(uuid())
+  email        String    @unique
   password     String
   name         String
-  role         Role     @default(USER)
-  refreshToken String?  @db.Text
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  dob          DateTime?
+  phoneNumber  String?   @map("phone_number")
+  role         Role      @default(USER)
+  refreshToken String?   @db.Text
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime? @map("deleted_at")
+
+  @@map("users")
 }
 
 enum Role {
@@ -214,28 +222,72 @@ enum Role {
 }
 ```
 
+**Features:**
+- Soft delete support (`deletedAt`)
+- Date of birth field
+- Phone number field
+
 ## Project Structure
 
 ```
 src/
-├── controllers/       # Request handlers
-│   └── auth.controller.ts
-├── middleware/        # Express middleware
-│   ├── auth.ts
-│   ├── errorHandler.ts
-│   └── validation.ts
-├── routes/           # API routes
-│   └── auth.routes.ts
-├── types/            # TypeScript types
-│   └── index.ts
-├── utils/            # Utility functions
-│   ├── jwt.ts
-│   ├── password.ts
-│   ├── prisma.ts
-│   └── response.ts
-└── index.ts          # Application entry point
-tests/
-└── auth.test.ts      # Unit tests for auth endpoints
+├── modules/              # Feature modules (feature-based architecture)
+│   └── auth/             # Authentication module
+│       ├── auth.dto.ts         # Validation schemas (Zod)
+│       ├── auth.types.ts       # Module-specific types
+│       ├── auth.controller.ts  # HTTP request handlers
+│       ├── auth.service.ts     # Business logic
+│       ├── auth.routes.ts      # Route definitions
+│       └── index.ts            # Module exports
+├── shared/               # Shared resources (used across modules)
+│   ├── middleware/       # Auth, validation, error handling
+│   ├── utils/            # JWT, password, database, response
+│   └── types/            # Shared TypeScript interfaces
+├── config/               # Configuration management
+│   ├── app.config.ts
+│   ├── database.config.ts
+│   └── jwt.config.ts
+└── index.ts              # Application entry point
+```
+
+### Architecture Principles
+
+**Feature-Based Architecture**: Each module is self-contained with:
+- **DTOs**: Input validation with Zod
+- **Types**: Module-specific TypeScript interfaces
+- **Controller**: HTTP request/response handling
+- **Service**: Business logic and database operations
+- **Routes**: Endpoint definitions with middleware
+
+**Shared Resources**: Only truly shared code goes here:
+- Middleware used by multiple modules
+- Utility functions (JWT, password hashing, etc.)
+- Common TypeScript interfaces (ApiResponse, JwtPayload)
+
+### Adding New Modules
+
+To add a new module (e.g., `patients`):
+
+1. Create module structure:
+```
+src/modules/patients/
+├── patients.dto.ts
+├── patients.types.ts
+├── patients.controller.ts
+├── patients.service.ts
+├── patients.routes.ts
+└── index.ts
+```
+
+2. Register routes in `src/index.ts`:
+```typescript
+import { patientsRoutes } from './modules/patients';
+app.use('/api/patients', patientsRoutes);
+```
+
+3. Update Prisma schema and run migration:
+```bash
+npm run prisma:migrate
 ```
 
 ## Environment Variables

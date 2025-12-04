@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { JwtPayload, AuthTokens } from '../types/index.js';
+import { JwtPayload, AuthTokens } from '../types';
 
 const ACCESS_TOKEN_SECRET = (process.env.ACCESS_TOKEN_SECRET as string) || 'your-access-token-secret-key';
 const REFRESH_TOKEN_SECRET = (process.env.REFRESH_TOKEN_SECRET as string) || 'your-refresh-token-secret-key';

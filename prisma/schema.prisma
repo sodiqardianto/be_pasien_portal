@@ -6,8 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
-  url      = env("DATABASE_URL")
+  provider = "postgresql"
 }
 
 enum Role {
@@ -15,15 +14,42 @@ enum Role {
   ADMIN
 }
 
+// ============================================
+// AUTHENTICATION & USERS
+// ============================================
 model User {
-  id           String   @id @default(uuid())
-  email        String   @unique
+  id           String    @id @default(uuid())
+  email        String    @unique
   password     String
   name         String
-  role         Role     @default(USER)
-  refreshToken String?  @db.Text
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  dob          DateTime?
+  phoneNumber  String?   @map("phone_number")
+  role         Role      @default(USER)
+  refreshToken String?   @map("refresh_token") @db.Text
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  deletedAt    DateTime? @map("deleted_at")
 
   @@map("users")
+}
+
+// ============================================
+// HOSPITALS
+// ============================================
+model Hospital {
+  id          String    @id @default(uuid())
+  name        String
+  description String    @db.Text
+  image       String?
+  phone       String
+  address     String    @db.Text
+  latitude    Float
+  longitude   Float
+  email       String
+  website     String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  deletedAt   DateTime? @map("deleted_at")
+
+  @@map("hospitals")
 }

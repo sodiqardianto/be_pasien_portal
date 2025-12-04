@@ -1,5 +1,6 @@
 import { Role } from '@prisma/client';
 
+// Shared types used across multiple modules
 export interface ApiResponse<T = any> {
   success: boolean;
   message: string;
@@ -17,12 +18,4 @@ export interface JwtPayload {
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;
-}
-
-export interface UserResponse {
-  id: string;
-  email: string;
-  name: string;
-  role: Role;
-  createdAt: Date;
 }

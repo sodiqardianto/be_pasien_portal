@@ -1,7 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import { JwtUtil } from '../utils/jwt';
-import { ResponseHandler } from '../utils/response';
-import { JwtPayload } from '../types/index';
+import { JwtUtil, ResponseHandler } from '../utils';
+import { JwtPayload } from '../types';
 import { Role } from '@prisma/client';
 
 declare global {
