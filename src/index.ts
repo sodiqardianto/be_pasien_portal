@@ -6,6 +6,7 @@ import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { authRoutes } from './modules/auth';
 import { hospitalsRoutes } from './modules/hospitals';
+import { chatbotRoutes } from './modules/chatbot';
 import { errorHandler, notFoundHandler, sanitizeAll } from './shared/middleware';
 import { connectDatabase, disconnectDatabase } from './shared/utils/prisma.util';
 import { appConfig } from './config';
@@ -86,6 +87,7 @@ app.get('/', (_req, res) => {
     endpoints: {
       auth: '/api/auth',
       hospitals: '/api/hospitals',
+      chatbot: '/api/chatbot',
       docs: '/api-docs',
     },
   });
@@ -94,6 +96,7 @@ app.get('/', (_req, res) => {
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/hospitals', hospitalsRoutes);
+app.use('/api/chatbot', chatbotRoutes);
 
 // Error handlers
 app.use(notFoundHandler);

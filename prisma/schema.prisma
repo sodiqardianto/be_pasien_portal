@@ -18,17 +18,19 @@ enum Role {
 // AUTHENTICATION & USERS
 // ============================================
 model User {
-  id           String    @id @default(uuid())
-  email        String    @unique
+  id           String        @id @default(uuid())
+  email        String        @unique
   password     String
   name         String
   dob          DateTime?
-  phoneNumber  String?   @map("phone_number")
-  role         Role      @default(USER)
-  refreshToken String?   @map("refresh_token") @db.Text
-  createdAt    DateTime  @default(now()) @map("created_at")
-  updatedAt    DateTime  @updatedAt @map("updated_at")
-  deletedAt    DateTime? @map("deleted_at")
+  phoneNumber  String?       @map("phone_number")
+  role         Role          @default(USER)
+  refreshToken String?       @map("refresh_token") @db.Text
+  createdAt    DateTime      @default(now()) @map("created_at")
+  updatedAt    DateTime      @updatedAt @map("updated_at")
+  deletedAt    DateTime?     @map("deleted_at")
+  
+  chatMessages ChatMessage[]
 
   @@map("users")
 }
@@ -68,4 +70,25 @@ model Hospital {
   deletedAt   DateTime? @map("deleted_at")
 
   @@map("hospitals")
+}
+
+// ============================================
+// AI CHATBOT
+// ============================================
+enum MessageRole {
+  USER
+  ASSISTANT
+}
+
+model ChatMessage {
+  id        String      @id @default(uuid())
+  userId    String?     @map("user_id") // Nullable untuk guest user
+  role      MessageRole
+  content   String      @db.Text
+  createdAt DateTime    @default(now()) @map("created_at")
+  
+  user      User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("chat_messages")
 }
