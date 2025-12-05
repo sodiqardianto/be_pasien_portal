@@ -1,14 +1,14 @@
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 import { AuthController } from './auth.controller';
-import { registerDto, loginDto, refreshTokenDto } from './auth.dto';
+import { registerDto, loginDto, refreshTokenDto, requestOtpDto, verifyOtpDto } from './auth.dto';
 import { validate, authenticate } from '../../shared/middleware';
 
 const router = Router();
 
-// Rate limiter for login/register - 5 requests per 15 minutes
+// Rate limiter for login/register - 5 requests per 10 minutes
 const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 10 * 60 * 1000, // 10 minutes
   max: 5,
   message: {
     success: false,
@@ -17,6 +17,10 @@ const authLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
+  // Use IP address from request
+  keyGenerator: (req) => {
+    return req.ip || req.socket.remoteAddress || 'unknown';
+  },
 });
 
 // Rate limiter for refresh token - 10 requests per 15 minutes
@@ -27,6 +31,9 @@ const refreshLimiter = rateLimit({
     success: false,
     message: 'Too many refresh attempts, please try again later',
     error: 'Rate limit exceeded',
+  },
+  keyGenerator: (req) => {
+    return req.ip || req.socket.remoteAddress || 'unknown';
   },
 });
 
@@ -144,5 +151,57 @@ router.post('/logout', authenticate, AuthController.logout);
  *         description: Profile retrieved successfully
  */
 router.get('/profile', authenticate, AuthController.getProfile);
+
+/**
+ * @swagger
+ * /api/auth/otp/request:
+ *   post:
+ *     summary: Request OTP code
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - phoneNumber
+ *             properties:
+ *               phoneNumber:
+ *                 type: string
+ *                 example: "+6281234567890"
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully
+ */
+router.post('/otp/request', authLimiter, validate(requestOtpDto), AuthController.requestOtp);
+
+/**
+ * @swagger
+ * /api/auth/otp/verify:
+ *   post:
+ *     summary: Verify OTP code and login
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - phoneNumber
+ *               - code
+ *             properties:
+ *               phoneNumber:
+ *                 type: string
+ *                 example: "+6281234567890"
+ *               code:
+ *                 type: string
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: Login successful
+ */
+router.post('/otp/verify', authLimiter, validate(verifyOtpDto), AuthController.verifyOtp);
 
 export default router;

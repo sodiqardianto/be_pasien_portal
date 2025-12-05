@@ -10,8 +10,8 @@ export const registerDto = z.object({
     .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
     .regex(/[0-9]/, 'Password must contain at least one number'),
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  dob: z.string().datetime().optional(),
-  phoneNumber: z.string().regex(/^[0-9+\-\s()]+$/, 'Invalid phone number format').optional(),
+  dob: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Invalid date format. Use YYYY-MM-DD format'),
+  phoneNumber: z.string().regex(/^[0-9+\-\s()]+$/, 'Invalid phone number format'),
 });
 
 export type RegisterDto = z.infer<typeof registerDto>;
@@ -30,3 +30,22 @@ export const refreshTokenDto = z.object({
 });
 
 export type RefreshTokenDto = z.infer<typeof refreshTokenDto>;
+
+// Request OTP DTO
+export const requestOtpDto = z.object({
+  phoneNumber: z
+    .string()
+    .regex(/^(\+62|62|0)[0-9]{9,12}$/, 'Invalid Indonesian phone number format'),
+});
+
+export type RequestOtpDto = z.infer<typeof requestOtpDto>;
+
+// Verify OTP DTO
+export const verifyOtpDto = z.object({
+  phoneNumber: z
+    .string()
+    .regex(/^(\+62|62|0)[0-9]{9,12}$/, 'Invalid Indonesian phone number format'),
+  code: z.string().length(6, 'OTP code must be 6 digits'),
+});
+
+export type VerifyOtpDto = z.infer<typeof verifyOtpDto>;

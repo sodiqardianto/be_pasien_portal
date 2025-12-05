@@ -65,11 +65,13 @@ router.post(
  *   get:
  *     summary: Get all hospitals
  *     tags: [Hospitals]
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Hospitals retrieved successfully
  */
-router.get('/', HospitalsController.findAll);
+router.get('/', authenticate, HospitalsController.findAll);
 
 /**
  * @swagger
@@ -77,6 +79,8 @@ router.get('/', HospitalsController.findAll);
  *   get:
  *     summary: Get hospital by ID
  *     tags: [Hospitals]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -87,7 +91,7 @@ router.get('/', HospitalsController.findAll);
  *       200:
  *         description: Hospital retrieved successfully
  */
-router.get('/:id', HospitalsController.findById);
+router.get('/:id', authenticate, HospitalsController.findById);
 
 /**
  * @swagger

@@ -34,6 +34,22 @@ model User {
 }
 
 // ============================================
+// OTP CODES
+// ============================================
+model OtpCode {
+  id          String    @id @default(uuid())
+  phoneNumber String    @map("phone_number")
+  code        String
+  expiresAt   DateTime  @map("expires_at")
+  isUsed      Boolean   @default(false) @map("is_used")
+  attempts    Int       @default(0)
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  @@index([phoneNumber, code])
+  @@map("otp_codes")
+}
+
+// ============================================
 // HOSPITALS
 // ============================================
 model Hospital {

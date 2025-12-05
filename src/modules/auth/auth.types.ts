@@ -5,7 +5,7 @@ export interface UserResponse {
   id: string;
   email: string;
   name: string;
-  dob?: Date | null;
+  dob?: string | null;
   phoneNumber?: string | null;
   role: Role;
   createdAt: Date;

@@ -7,6 +7,7 @@ Backend API for Hospital Management System with JWT Authentication, built with E
 ## Features
 
 - **JWT Authentication** with Access & Refresh Tokens
+- **OTP Login via WhatsApp** for mobile apps
 - **User Roles** (USER, ADMIN)
 - **Request Validation** using Zod
 - **Rate Limiting** to prevent brute force attacks
@@ -112,6 +113,29 @@ Authorization: Bearer your-access-token
 GET /api/auth/profile
 Authorization: Bearer your-access-token
 ```
+
+#### Request OTP (WhatsApp)
+```http
+POST /api/auth/otp/request
+Content-Type: application/json
+
+{
+  "phoneNumber": "081234567890"
+}
+```
+
+#### Verify OTP & Login
+```http
+POST /api/auth/otp/verify
+Content-Type: application/json
+
+{
+  "phoneNumber": "081234567890",
+  "code": "123456"
+}
+```
+
+> **📱 OTP Login**: See [QUICK_START_OTP.md](QUICK_START_OTP.md) for complete OTP implementation guide
 
 ## API Documentation
 

@@ -12,6 +12,9 @@ import { appConfig } from './config';
 
 const app: Application = express();
 
+// Trust proxy - required for rate limiting behind proxies/load balancers
+app.set('trust proxy', 1);
+
 // Security headers
 app.use(helmet({
   contentSecurityPolicy: {
@@ -27,9 +30,10 @@ app.use(helmet({
 
 // CORS configuration
 const corsOptions = {
-  origin: appConfig.corsOrigin === '*' 
-    ? '*' 
-    : appConfig.corsOrigin.split(',').map(origin => origin.trim()),
+  // origin: appConfig.corsOrigin === '*' 
+  //   ? '*' 
+  //   : appConfig.corsOrigin.split(',').map(origin => origin.trim()),
+  origin: ["http://localhost:3000", "http://localhost:8080"],
   credentials: true,
   optionsSuccessStatus: 200,
 };
@@ -37,6 +41,9 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Serve static files - public folder
+app.use('/public', express.static('public'));
 
 // Sanitize all inputs
 app.use(sanitizeAll);

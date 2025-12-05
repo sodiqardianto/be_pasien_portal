@@ -12,8 +12,13 @@ export class AuthController {
         ...result.tokens,
       });
     } catch (error) {
-      if (error instanceof Error && error.message === 'User already exists') {
-        return ResponseHandler.error(res, 'User already exists', 'Email is already registered', 409);
+      if (error instanceof Error) {
+        if (error.message === 'Email already registered') {
+          return ResponseHandler.error(res, 'Email already registered', 'This email is already in use', 409);
+        }
+        if (error.message === 'Phone number already registered') {
+          return ResponseHandler.error(res, 'Phone number already registered', 'This phone number is already in use', 409);
+        }
       }
       next(error);
     }
@@ -79,6 +84,51 @@ export class AuthController {
     } catch (error) {
       if (error instanceof Error && error.message === 'User not found') {
         return ResponseHandler.notFound(res, 'User not found');
+      }
+      next(error);
+    }
+  }
+
+  static async requestOtp(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    try {
+      const result = await AuthService.requestOtp(req.body);
+
+      return ResponseHandler.success(res, 'OTP sent successfully', {
+        phoneNumber: req.body.phoneNumber,
+        expiresIn: result.expiresIn,
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message === 'Phone number not registered') {
+          return ResponseHandler.error(res, 'Phone number not registered', 'Please register first before using OTP login', 404);
+        }
+        if (error.message === 'Too many OTP requests. Please try again later') {
+          return ResponseHandler.error(res, 'Too many requests', error.message, 429);
+        }
+      }
+      next(error);
+    }
+  }
+
+  static async verifyOtp(req: Request, res: Response, next: NextFunction): Promise<Response | void> {
+    try {
+      const result = await AuthService.verifyOtp(req.body);
+
+      return ResponseHandler.success(res, 'Login successful', {
+        user: result.user,
+        ...result.tokens,
+      });
+    } catch (error) {
+      if (error instanceof Error) {
+        if (error.message === 'Phone number not registered') {
+          return ResponseHandler.error(res, 'Phone number not registered', 'Please register first before using OTP login', 404);
+        }
+        if (error.message === 'Invalid or expired OTP code') {
+          return ResponseHandler.error(res, 'Invalid OTP', error.message, 400);
+        }
+        if (error.message === 'Too many failed attempts. Please request a new OTP') {
+          return ResponseHandler.error(res, 'Too many attempts', error.message, 429);
+        }
       }
       next(error);
     }
