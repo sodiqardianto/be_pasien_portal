@@ -8,7 +8,7 @@ const router = Router();
 
 // Rate limiter for login/register - 5 requests per 10 minutes
 const authLimiter = rateLimit({
-  windowMs: 10 * 60 * 1000, // 10 minutes
+  windowMs: 1 * 60 * 1000, // 10 minutes
   max: 5,
   message: {
     success: false,
@@ -25,7 +25,7 @@ const authLimiter = rateLimit({
 
 // Rate limiter for refresh token - 10 requests per 15 minutes
 const refreshLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
+  windowMs: 5 * 60 * 1000, // 15 minutes
   max: 10,
   message: {
     success: false,

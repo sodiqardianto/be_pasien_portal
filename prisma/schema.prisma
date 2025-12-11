@@ -82,12 +82,12 @@ enum MessageRole {
 
 model ChatMessage {
   id        String      @id @default(uuid())
-  userId    String?     @map("user_id") // Nullable untuk guest user
+  userId    String      @map("user_id") // Required - authentication is mandatory
   role      MessageRole
   content   String      @db.Text
   createdAt DateTime    @default(now()) @map("created_at")
   
-  user      User?       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User        @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("chat_messages")

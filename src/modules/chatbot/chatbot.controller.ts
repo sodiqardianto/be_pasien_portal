@@ -9,7 +9,7 @@ export class ChatbotController {
     next: NextFunction
   ): Promise<Response | void> {
     try {
-      const userId = req.user?.userId; // Dari auth middleware, bisa undefined untuk guest
+      const userId = req.user!.userId; // From auth middleware (required)
       const response = await ChatbotService.sendMessage(userId, req.body);
       return ResponseHandler.success(res, 'Message sent successfully', response);
     } catch (error) {
@@ -17,20 +17,36 @@ export class ChatbotController {
     }
   }
 
-  static async getHistory(
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ): Promise<Response | void> {
-    try {
-      const userId = req.user?.userId;
-      const { limit, offset } = req.query as any;
-      const history = await ChatbotService.getHistory(userId, limit, offset);
-      return ResponseHandler.success(res, 'Chat history retrieved successfully', history);
-    } catch (error) {
-      next(error);
-    }
+static async getHistory(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<Response | void> {
+  try {
+    const userId = req.user!.userId;
+    
+    // Parse and validate
+    const limit = Math.min(
+      parseInt(req.query.limit as string) || 50,
+      100 // Max 100 messages
+    );
+    const offset = Math.max(
+      parseInt(req.query.offset as string) || 0,
+      0 // Min 0
+    );
+    
+    const history = await ChatbotService.getHistory(userId, limit, offset);
+    
+    return ResponseHandler.success(
+      res,
+      'Chat history retrieved successfully',
+      history
+    );
+  } catch (error) {
+    next(error);
   }
+}
+
 
   static async clearHistory(
     req: Request,
@@ -38,10 +54,7 @@ export class ChatbotController {
     next: NextFunction
   ): Promise<Response | void> {
     try {
-      const userId = req.user?.userId;
-      if (!userId) {
-        return ResponseHandler.unauthorized(res, 'Authentication required to clear history');
-      }
+      const userId = req.user!.userId; // From auth middleware (required)
       await ChatbotService.clearHistory(userId);
       return ResponseHandler.success(res, 'Chat history cleared successfully');
     } catch (error) {

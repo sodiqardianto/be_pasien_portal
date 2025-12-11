@@ -10,7 +10,9 @@
     "start": "node dist/index.js",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "test:sqlserver": "tsx test-sqlserver.ts",
+    "test:chatbot-db": "tsx test-chatbot-with-db.ts"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.1.0",
@@ -19,6 +21,7 @@
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.5",
     "@types/jsonwebtoken": "^9.0.10",
+    "@types/mssql": "^9.1.8",
     "@types/node": "^24.10.1",
     "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
@@ -28,6 +31,7 @@
     "express-rate-limit": "^8.2.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "mssql": "^12.2.0",
     "openai": "^6.10.0",
     "pg": "^8.16.3",
     "prisma": "^7.1.0",
